@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!-- HTML = the STRUCTURE of the page (what elements exist) -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- This line makes the page fit properly on a phone screen -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My To-Do List</title>
+
+  <!-- CSS = the LOOK of the page (colors, spacing, fonts) -->
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f4f5f7;
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .card {
+      background: white;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 { margin-top: 0; font-size: 1.4rem; }
+    .row { display: flex; gap: 8px; }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      padding: 10px 14px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+    ul { list-style: none; padding: 0; margin: 16px 0 0; }
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    li span { flex: 1; }
+    li.done span { text-decoration: line-through; color: #999; }
+    li button { background: #ef4444; padding: 6px 10px; }
+    #count { color: #666; font-size: 0.9rem; margin-top: 12px; }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>My To-Do List</h1>
+
+    <div class="row">
+      <input type="text" id="taskInput" placeholder="Add a task..." />
+      <button id="addBtn">Add</button>
+    </div>
+
+    <ul id="taskList"></ul>
+    <div id="count"></div>
+  </div>
+
+  <!-- JavaScript = the BEHAVIOR of the page (what happens when you click) -->
+  <script>
+    // 1. Grab the elements we need from the page
+    const input = document.getElementById("taskInput");
+    const addBtn = document.getElementById("addBtn");
+    const list = document.getElementById("taskList");
+    const count = document.getElementById("count");
+
+    // 2. Load saved tasks from the browser's storage (or start with an empty list).
+    //    Each task looks like: { text: "Buy milk", done: false }
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    // 3. Save the tasks so they're still there after you close the page
+    function save() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    // 4. Draw the list on screen. We call this every time something changes.
+    function render() {
+      list.innerHTML = ""; // clear the old list
+
+      tasks.forEach((task, index) => {
+        const li = document.createElement("li");
+        if (task.done) li.className = "done";
+
+        // Checkbox to mark done
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.checked = task.done;
+        check.onchange = () => {
+          tasks[index].done = check.checked;
+          save();
+          render();
+        };
+
+        // The task text (textContent is safe: it never runs typed code)
+        const span = document.createElement("span");
+        span.textContent = task.text;
+
+        // Delete button
+        const del = document.createElement("button");
+        del.textContent = "Delete";
+        del.onclick = () => {
+          tasks.splice(index, 1); // remove 1 item at this position
+          save();
+          render();
+        };
+
+        li.append(check, span, del);
+        list.appendChild(li);
+      });
+
+      const left = tasks.filter((t) => !t.done).length;
+      count.textContent = left + " task(s) left";
+    }
+
+    // 5. Add a new task
+    function addTask() {
+      const text = input.value.trim();
+      if (text === "") return; // ignore empty input
+      tasks.push({ text: text, done: false });
+      input.value = "";
+      save();
+      render();
+    }
+
+    // 6. Connect actions to functions: click the button, or press Enter
+    addBtn.onclick = addTask;
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addTask();
+    });
+
+    // 7. Draw the list for the first time when the page opens
+    render();
+  </script>
+</body>
+</html>
